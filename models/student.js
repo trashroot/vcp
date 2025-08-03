@@ -1,14 +1,13 @@
 // models/student.js
 
-const Database = require('sqlite');
+const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const dbPath = path.resolve(__dirname, '../data/students.db');
-let db;
+const db = new sqlite3.Database(dbPath);
 
-// Initialize and open the database
-Database.open(dbPath).then(database => {
-  db = database;
-  return db.run(`CREATE TABLE IF NOT EXISTS students (
+// Initialize table
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS students (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     age INTEGER NOT NULL,
@@ -16,53 +15,50 @@ Database.open(dbPath).then(database => {
   )`);
 });
 class Student {
-  static async getAll(callback) {
-    try {
-      const rows = await db.all('SELECT * FROM students');
-      callback(null, rows);
-    } catch (err) {
-      callback(err);
-    }
+  static getAll(callback) {
+    db.all('SELECT * FROM students', [], (err, rows) => {
+      callback(err, rows);
+    });
   }
 
-  static async getById(id, callback) {
-    try {
-      const row = await db.get('SELECT * FROM students WHERE id = ?', id);
-      callback(null, row);
-    } catch (err) {
-      callback(err);
-    }
+  static getById(id, callback) {
+    db.get('SELECT * FROM students WHERE id = ?', [id], (err, row) => {
+      callback(err, row);
+    });
   }
 
-  static async create(data, callback) {
-    try {
-      const { name, age, grade } = data;
-      const result = await db.run('INSERT INTO students (name, age, grade) VALUES (?, ?, ?)', name, age, grade);
-      const row = await db.get('SELECT * FROM students WHERE id = ?', result.lastID);
-      callback(null, row);
-    } catch (err) {
-      callback(err);
-    }
+  static create(data, callback) {
+    const { name, age, grade } = data;
+    db.run(
+      'INSERT INTO students (name, age, grade) VALUES (?, ?, ?)',
+      [name, age, grade],
+      function (err) {
+        if (err) return callback(err);
+        db.get('SELECT * FROM students WHERE id = ?', [this.lastID], (err, row) => {
+          callback(err, row);
+        });
+      }
+    );
   }
 
-  static async update(id, data, callback) {
-    try {
-      const { name, age, grade } = data;
-      await db.run('UPDATE students SET name = ?, age = ?, grade = ? WHERE id = ?', name, age, grade, id);
-      const row = await db.get('SELECT * FROM students WHERE id = ?', id);
-      callback(null, row);
-    } catch (err) {
-      callback(err);
-    }
+  static update(id, data, callback) {
+    const { name, age, grade } = data;
+    db.run(
+      'UPDATE students SET name = ?, age = ?, grade = ? WHERE id = ?',
+      [name, age, grade, id],
+      function (err) {
+        if (err) return callback(err);
+        db.get('SELECT * FROM students WHERE id = ?', [id], (err, row) => {
+          callback(err, row);
+        });
+      }
+    );
   }
 
-  static async delete(id, callback) {
-    try {
-      await db.run('DELETE FROM students WHERE id = ?', id);
-      callback(null, { deletedID: id });
-    } catch (err) {
-      callback(err);
-    }
+  static delete(id, callback) {
+    db.run('DELETE FROM students WHERE id = ?', [id], function (err) {
+      callback(err, { deletedID: id });
+    });
   }
 }
 
