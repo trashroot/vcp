@@ -14,6 +14,7 @@ db.serialize(() => {
     grade TEXT NOT NULL
   )`);
 });
+
 class Student {
   static getAll(callback) {
     db.all('SELECT * FROM students', [], (err, rows) => {
@@ -42,22 +43,26 @@ class Student {
   }
 
   static update(id, data, callback) {
-    const { name, age, grade } = data;
-    db.run(
-      'UPDATE students SET name = ?, age = ?, grade = ? WHERE id = ?',
-      [name, age, grade, id],
-      function (err) {
-        if (err) return callback(err);
-        db.get('SELECT * FROM students WHERE id = ?', [id], (err, row) => {
-          callback(err, row);
-        });
-      }
-    );
+    Student.getById(id, (err, student) => {
+      if (err || !student) return callback(err, null);
+      const name = data.name ?? student.name;
+      const age = data.age ?? student.age;
+      const grade = data.grade ?? student.grade;
+      db.run(
+        'UPDATE students SET name = ?, age = ?, grade = ? WHERE id = ?',
+        [name, age, grade, id],
+        function (err) {
+          if (err) return callback(err, null);
+          Student.getById(id, callback);
+        }
+      );
+    });
   }
 
   static delete(id, callback) {
     db.run('DELETE FROM students WHERE id = ?', [id], function (err) {
-      callback(err, { deletedID: id });
+      if (err) return callback(err, false);
+      callback(null, this.changes > 0);
     });
   }
 }

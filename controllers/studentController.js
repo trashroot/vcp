@@ -1,6 +1,3 @@
-// controllers/studentController.js
-
-
 const logger = require('../logger');
 const Student = require('../models/student');
 
@@ -85,59 +82,6 @@ exports.deleteStudent = (req, res) => {
       return res.status(404).json({ error: 'Student not found' });
     }
     logger.info(`Student deleted with id ${id}`);
-    res.status(204).send();
-  });
-};
-// controllers/studentController.js
-
-// const Student = require('../models/student');
-
-
-exports.getAllStudents = (req, res) => {
-  Student.getAll((err, students) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    res.json(students);
-  });
-};
-
-
-exports.getStudentById = (req, res) => {
-  const id = parseInt(req.params.id);
-  Student.getById(id, (err, student) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    if (!student) return res.status(404).json({ error: 'Student not found' });
-    res.json(student);
-  });
-};
-
-
-exports.createStudent = (req, res) => {
-  const { name, age, grade } = req.body;
-  if (!name || !age || !grade) {
-    return res.status(400).json({ error: 'Name, age, and grade are required' });
-  }
-  Student.create({ name, age, grade }, (err, student) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    res.status(201).json(student);
-  });
-};
-
-
-exports.updateStudent = (req, res) => {
-  const id = parseInt(req.params.id);
-  Student.update(id, req.body, (err, student) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    if (!student) return res.status(404).json({ error: 'Student not found' });
-    res.json(student);
-  });
-};
-
-
-exports.deleteStudent = (req, res) => {
-  const id = parseInt(req.params.id);
-  Student.delete(id, (err, success) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    if (!success) return res.status(404).json({ error: 'Student not found' });
     res.status(204).send();
   });
 };

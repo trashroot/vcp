@@ -3,11 +3,22 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const logger = require('./logger');
+const { v4: uuidv4 } = require('uuid');
+const asyncLocalStorage = require('./requestContext');
 const studentRoutes = require('./routes/studentRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+
+
+// Middleware to set request_id in context for each request
+app.use((req, res, next) => {
+  const requestId = req.headers['request_id'] || req.headers['request-id'] || uuidv4();
+  asyncLocalStorage.run({ requestId }, () => {
+    next();
+  });
+});
 
 // Request logging middleware using winston
 app.use((req, res, next) => {
