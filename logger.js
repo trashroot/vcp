@@ -23,20 +23,20 @@ winston.addColors({
 
 
 
-const addRequestId = winston.format((info) => {
-  let requestId;
+const addReqId = winston.format((info) => {
+  let reqId;
   if (asyncLocalStorage) {
     const store = asyncLocalStorage.getStore();
-    requestId = store && store.requestId;
+    reqId = store && store.reqId;
   }
-  info.uuid = requestId || uuidv4();
+  info.uuid = reqId || uuidv4();
   return info;
 });
 
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
-    addRequestId(),
+    addReqId(),
     winston.format.colorize({ all: true }),
     winston.format.timestamp(),
     winston.format.printf(({ timestamp, level, message, uuid }) => `${timestamp} [${level}] [${uuid}]: ${message}`)

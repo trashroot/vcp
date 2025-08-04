@@ -1,5 +1,24 @@
 const logger = require('../logger');
 const Student = require('../models/student');
+const StudentProfile = require('../models/studentProfile');
+
+// Update student profile details
+exports.updateStudentProfile = (req, res) => {
+  const id = parseInt(req.params.id);
+  logger.info(`Updating profile for student with id ${id}`);
+  StudentProfile.updateProfile(id, req.body, (err, student) => {
+    if (err) {
+      logger.error(`Database error while updating profile for student id ${id}`);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    if (!student) {
+      logger.warn(`Student not found for profile update with id ${id}`);
+      return res.status(404).json({ error: 'Student not found' });
+    }
+    logger.info(`Student profile updated with id ${id}`);
+    res.json(student);
+  });
+};
 
 
 exports.getAllStudents = (req, res) => {
